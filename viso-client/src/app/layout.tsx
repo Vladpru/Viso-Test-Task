@@ -25,14 +25,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <QueryClientProviderWrapper> 
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`} 
-          cz-shortcut-listen='true'
-        >
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`} 
+        cz-shortcut-listen='true'
+      >
+        <QueryClientProviderWrapper>
           {children}
-        </body>
-      </QueryClientProviderWrapper>
+        </QueryClientProviderWrapper>
+      </body>
     </html>
   );
 }
