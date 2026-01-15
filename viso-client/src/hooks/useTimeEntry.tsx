@@ -1,62 +1,81 @@
-import { timeEntryService } from "@/services/time-entry.service"
-import { TTimeEntry } from "@/shared/types/time-entry.type"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { toast } from "sonner"
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import { timeEntryService } from '@/services/time-entry.service';
+
+import { TTimeEntryInput } from '@/shared/types/time-entry.type';
 
 export const useCreateTimeEntry = () => {
-  const {mutate, isPending} = useMutation({
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
     mutationKey: ['createTimeEntry'],
     mutationFn: timeEntryService.create,
-    onSuccess: data => {
-      toast.success("Time entry created!")
+    onSuccess: async (data) => {
+      toast.success('Time entry created!');
+      await queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
     },
-    onError: error => {
-      console.error('Time entry creation error: ', error);
-      toast.error("Error creating time entry")
-    }
-  })
-  
+    onError: () => {
+      toast.error('Error creating time entry');
+    },
+  });
+
   return {
     mutate,
-    isPending
-  }
-} 
+    isPending,
+  };
+};
 
 export const useUpdateTimeEntry = () => {
-  const {mutate, isPending} = useMutation({
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
     mutationKey: ['updateTimeEntry'],
     mutationFn: timeEntryService.update,
-    onSuccess: data => {
-      toast.success("Time entry updated!")
+    onSuccess: (data) => {
+      toast.success('Time entry updated!');
+      queryClient.invalidateQueries({ queryKey: ['timeEntries'] });
     },
-    onError: error => {
-      console.error('Time entry update error: ', error);
-      toast.error("Error update time entry")
-    }
-  })
-  
+    onError: () => {
+      toast.error('Error update time entry');
+    },
+  });
+
   return {
     mutate,
-    isPending
-  }
-} 
+    isPending,
+  };
+};
 
 export const useGetTimeEntries = () => {
   const {
-    data: timeEnties = [], 
+    data: timeEntries = [],
     isLoading,
     isError,
-  } = useQuery<TTimeEntry[]>({
-    queryKey: ['transactions'],
+    refetch,
+  } = useQuery<TTimeEntryInput[]>({
+    queryKey: ['timeEntries'],
     queryFn: async () => {
       const result = await timeEntryService.getAll();
-      return Array.isArray(result) ? result : [result];
+
+      if (!result || (Array.isArray(result) && result.length === 0)) {
+        return [];
+      }
+
+      const entries = Array.isArray(result) ? result : [result];
+
+      const validEntries = entries.filter(
+        (entry: any) => entry.hours !== undefined && entry.date !== undefined
+      );
+
+      return validEntries;
     },
   });
-  
+
   return {
-    timeEnties,
+    timeEntries,
     isLoading,
-    isError
-  }
-}
+    isError,
+    refetch,
+  };
+};
