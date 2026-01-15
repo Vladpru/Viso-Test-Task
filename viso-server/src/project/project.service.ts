@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -15,5 +19,16 @@ export class ProjectService {
     return await this.prisma.project.create({
       data: { title },
     });
+  }
+
+  async getAll() {
+    const projects = await this.prisma.project.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    if (!projects)
+      throw new NotFoundException('Not found any projects');
+    return projects;
   }
 }
